@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router'
 
+// Test comment to check GitHub Desktop detection
 const Navbar = () => {
   return (
     <nav className='navbar'>

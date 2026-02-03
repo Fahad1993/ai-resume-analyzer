@@ -1,6 +1,6 @@
 import {type FormEvent, useState} from 'react'
 import Navbar from "~/components/Navbar";
-import FileUploader from "~/components/fileUploader";
+import FileUploader from "~/components/FileUploader";
 import {usePuterStore} from "~/lib/puter";
 import {useNavigate} from "react-router";
 import {convertPdfToImage} from "~/lib/pdf2img";
@@ -23,11 +23,23 @@ const Upload = () => {
 
         setStatusText('Uploading the file...');
         const uploadedFile = await fs.upload([file]);
-        if(!uploadedFile) return setStatusText('Error: Failed to upload file');
+        if(!uploadedFile) {
+            setStatusText('Error: Failed to upload file');
+            setIsProcessing(false);
+            return;
+        }
 
         setStatusText('Converting to image...');
         const imageFile = await convertPdfToImage(file);
-        if(!imageFile.file) return setStatusText('Error: Failed to convert PDF to image');
+        console.log('PDF conversion result:', imageFile);
+        
+        if(imageFile.error || !imageFile.file) {
+            const errorMsg = imageFile.error || 'Failed to convert PDF to image';
+            console.error('PDF Conversion Error:', errorMsg);
+            setStatusText(`Error: ${errorMsg}`);
+            setIsProcessing(false);
+            return;
+        }
 
         setStatusText('Uploading the image...');
         const uploadedImage = await fs.upload([imageFile.file]);
@@ -48,7 +60,7 @@ const Upload = () => {
 
         const feedback = await ai.feedback(
             uploadedFile.path,
-            prepareInstructions({ jobTitle, jobDescription })
+            prepareInstructions({ jobTitle, jobDescription, AIResponseFormat: 'json' })
         )
         if (!feedback) return setStatusText('Error: Failed to analyze resume');
 

@@ -23,23 +23,11 @@ const Upload = () => {
 
         setStatusText('Uploading the file...');
         const uploadedFile = await fs.upload([file]);
-        if(!uploadedFile) {
-            setStatusText('Error: Failed to upload file');
-            setIsProcessing(false);
-            return;
-        }
+        if(!uploadedFile) return setStatusText('Error: Failed to upload file');
 
         setStatusText('Converting to image...');
         const imageFile = await convertPdfToImage(file);
-        console.log('PDF conversion result:', imageFile);
-        
-        if(imageFile.error || !imageFile.file) {
-            const errorMsg = imageFile.error || 'Failed to convert PDF to image';
-            console.error('PDF Conversion Error:', errorMsg);
-            setStatusText(`Error: ${errorMsg}`);
-            setIsProcessing(false);
-            return;
-        }
+        if(!imageFile.file) return setStatusText('Error: Failed to convert PDF to image');
 
         setStatusText('Uploading the image...');
         const uploadedImage = await fs.upload([imageFile.file]);
@@ -60,7 +48,7 @@ const Upload = () => {
 
         const feedback = await ai.feedback(
             uploadedFile.path,
-            prepareInstructions({ jobTitle, jobDescription, AIResponseFormat: 'json' })
+            prepareInstructions({ jobTitle, jobDescription })
         )
         if (!feedback) return setStatusText('Error: Failed to analyze resume');
 
